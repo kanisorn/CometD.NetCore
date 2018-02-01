@@ -3,6 +3,7 @@ using CometD.NetCore.Common;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -155,6 +156,10 @@ namespace CometD.NetCore.Client.Transport
 
             request.Headers.Add(HeaderCollection);
 
+            if (request.Headers == null)
+                request.Headers = new WebHeaderCollection();
+            request.Headers.Add(GetHeaderCollection());
+
             var content = JsonConvert.SerializeObject(ObjectConverter.ToListOfDictionary(messages));
 
             var longPollingRequest = new LongPollingRequest(listener, messages, request);
@@ -171,6 +176,11 @@ namespace CometD.NetCore.Client.Transport
 
             longPollingRequest.Exchange = exchange;
             AddRequest(longPollingRequest);
+        }
+
+        public new void AddHeaders(NameValueCollection headers)
+        {
+            base.AddHeaders(headers);
         }
 
         public override bool IsSending
@@ -200,7 +210,7 @@ namespace CometD.NetCore.Client.Transport
 #if IgnoreMetaConnect
                     if (!exchange.Content.Contains("meta/connect")) // Don't write polling messages to the output
 #endif
-                    System.Diagnostics.Debug.WriteLine($"Sending message(s): {exchange.Content}");
+                        System.Diagnostics.Debug.WriteLine($"Sending message(s): {exchange.Content}");
 #endif
 
                     // Write to the request stream.
